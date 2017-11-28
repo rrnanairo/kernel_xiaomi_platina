@@ -222,7 +222,7 @@ cmd_modversions_c =								\
 			$(call cmd_gensymtypes_c,$(KBUILD_SYMTYPES),$(@:.o=.symtypes)) \
 			    > $(@D)/$(@F).symversions;				\
 		fi;								\
-	else									\
+	else	
 		if $(LLVM_NM) $(@D)/.tmp_$(@F) | grep -q __ksymtab; then	\
 			$(call cmd_gensymtypes_c,$(KBUILD_SYMTYPES),$(@:.o=.symtypes)) \
 			    > $(@D)/$(@F).symversions;				\
@@ -543,6 +543,31 @@ link_export_list = rm -f $(dummy-object);\
 	rm $(dummy-object) $(ksyms-lds)
 
 quiet_cmd_export_list = EXPORTS $@
+
+ifdef CONFIG_LTO_CLANG
+# objdump doesn't understand IR files and llvm-dis doesn't support archives,
+# so we'll walk through each file in the archive separately
+cmd_export_list = 					\
+	rm -f $(ksyms-lds);				\
+	for o in $$($(AR) t $<); do			\
+		if $(OBJDUMP) -h $$o >/dev/null 2>/dev/null; then \
+			$(OBJDUMP) -h $$o | 		\
+				$(filter_export_list) 	\
+				>>$(ksyms-lds);		\
+		else					\
+			$(LLVM_DIS) -o=- $$o |		\
+				$(filter_export_list) 	\
+				>>$(ksyms-lds);		\
+		fi; 					\
+	done;						\
+	$(link_export_list)
+else
+cmd_export_list = $(OBJDUMP) -h $< | $(filter_export_list) >$(ksyms-lds); \
+	$(link_export_list)
+endif
+
+$(obj)/lib-ksyms.o: $(lib-target) FORCE
+	$(call if_changed,export_list)
 
 ifdef CONFIG_LTO_CLANG
 # objdump doesn't understand IR files and llvm-dis doesn't support archives,
