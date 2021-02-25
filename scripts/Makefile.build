@@ -569,9 +569,6 @@ cmd_export_list = $(OBJDUMP) -h $< | $(filter_export_list) >$(ksyms-lds); \
 	$(link_export_list)
 endif
 
-$(obj)/lib-ksyms.o: $(lib-target) FORCE
-	$(call if_changed,export_list)
-
 ifdef CONFIG_LTO_CLANG
 # objdump doesn't understand IR files and llvm-dis doesn't support archives,
 # so we'll walk through each file in the archive separately
