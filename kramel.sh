@@ -182,7 +182,7 @@ DATE=$(TZ=Asia/Jakarta date +"%Y%m%d")
 	fi
 
 	msg "|| Cloning Anykernel ||"
-	git clone --depth 1 --no-single-branch https://github.com/"$AUTHOR"/AnyKernel3.git -b eas
+	git clone --depth 1 --no-single-branch https://github.com/"$AUTHOR"/AnyKernel3.git -b master
 	msg "|| Cloning libufdt ||"
 	git submodule init
 	git submodule update
